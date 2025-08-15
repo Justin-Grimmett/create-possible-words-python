@@ -1,10 +1,11 @@
 import time
+import itertools
 
 def main():
 	startTime = time.time()			# testing
 	print(startTime)				# testing
 
-	word = "ABCDEFGH"
+	word = "ABCDEFGHI"
 
 	# Hardcoded minimum length word
 	shortestWordLen = 4
@@ -57,30 +58,14 @@ def main():
 	print("A = {}".format(time.time()))		# testing
 
 	# Loop through the possible length words from the hardcoded character minimum up to the full length of the input work itself
-	for wordLength in range(shortestWordLen, maxPossibleIndexVal+1, 1):
-		minRange = ""
-		maxRange = ""		
-
-		# Loop through up to this current dynamic word length to get all possible index values - eg "1111" to "4444"
-		for x in range(1,wordLength+1, 1):
-			minRange = minRange + "1"
-			maxRange = maxRange + str(maxPossibleIndexVal)
-		
-		# Then convert this range from a string into a number and loop through - eg 1111 up to 4444
-		for rangeIdx in range(int(minRange), int(maxRange), 1):
-			# Tut convert the value back into a string for text comparison
-			strValue = str(rangeIdx)
-
-			# Check for unique numeric values and must not contain invalid digits
-			newValueString = ""
-			for char in strValue:
-				# eg 11345 is invalid because of the two 1's, as is 12349 due to the 9
-				if char not in newValueString and char in allowedIndexStrVals:
-					newValueString = newValueString + char
-			# Must be the full length of the current loop, and not already exist in the relevant array
-			if len(newValueString) == wordLength and int(newValueString) not in allPossibleWordRangeValues:
-				# Add to the array if all good
-				allPossibleWordRangeValues.add(int(newValueString))
+	for wordLength in range(shortestWordLen, maxPossibleIndexVal+1):
+		# Generate all unique index combinations using itertools library permutations
+		for indexes in itertools.permutations(lettersIndexes, wordLength):
+			# For all possible index values, convert them to a string and then check that they do not contain any duplicate or invalid numbers
+			# eg 11345 is invalid because of the two 1's, as is 12349 due to the 9
+			intVal = int(''.join(str(idx) for idx in indexes))
+			# And then store these unique valid values
+			allPossibleWordRangeValues.add(intVal)
 
 	print("B = {}".format(time.time()))	# testing
 
