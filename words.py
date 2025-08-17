@@ -15,7 +15,11 @@ import gzip
 # The folder location of where to get the (extracted) CSV files containing the Words from - manually change this as required:
 dir = 'C:/Users/justi/Downloads/EOWL-v1.1.2/EOWL-v1.1.2/CSV Format/'
 
-minAllowedLen = 4   # Shortest allowed word - set as 4 for now - change this value as required
+minAllowedLen = 4           # Shortest allowed word - set as 4 for now - change this value as required
+
+separateFiles = True       # If false will be a single JSON output, otherwise will be seprate TXT files for each possible length word
+
+filesSubDir = "\\files\\"   # Where the relevant files (such as output files) are to go
 ##############################################################################################################
 
 finalWords = []                     # temp Output
@@ -67,13 +71,38 @@ while x <= MaxLen:
 
 # If any output data exists
 if len(output) > 0:
-    # Store this as a real JSON file
-    with open("words.json", "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=5)
-    # And then compress this JSON as a real GZ zipped file
-    with open("words.json", 'rb') as f_in:
-        with gzip.open('compressed-words.json.gz', 'wb') as f_out:
-            f_out.writelines(f_in)
+    currentDirecory = os.getcwd()
+    filesDir = currentDirecory + filesSubDir
+    if not os.path.exists(filesDir):
+        os.makedirs(filesDir)
+    # Separate word length TXT files
+    if separateFiles:
+        # Loop through the word lists for the numeric length within the object variable
+        for wordlength in output:
+            # Open a simple real TXT file for this word length
+            with open(filesDir+"{}.txt".format(str(wordlength)), "w", encoding="utf-8") as txtFile:
+                idx = 0
+                # Loop through the words in this list
+                for words in output[wordlength]:
+                    idx = idx + 1
+                    char = "\n" if idx < len(output[wordlength]) else ""
+                    # Save into the TXT file with a linebreak, but not for the very last word to prevent a blank final line
+                    txtFile.write(('%s'+char) %words)
+            # Close the file being edited
+            txtFile.close()
+            # Then compress this TXT file to a real GZ zipped fle
+            with open(filesDir+"{}.txt".format(str(wordlength)), "rb") as txtIn:
+                with gzip.open(filesDir+"{}.txt.gz".format(str(wordlength)), "wb") as zippedTxtOut:
+                    zippedTxtOut.writelines(txtIn)
+    else:
+    # One singular JSON
+        # Store this as a real JSON file
+        with open(filesDir+"words.json", "w", encoding="utf-8") as jsonFile:
+            json.dump(output, jsonFile, indent=5)
+        # And then compress this JSON as a real GZ zipped file
+        with open(filesDir+"words.json", 'rb') as jsonIn:
+            with gzip.open(filesDir+'compressed-words.json.gz', 'wb') as zippedJsonOut:
+                zippedJsonOut.writelines(jsonIn)
     print("Complete")
 else:
     print("No data to store")
